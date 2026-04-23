@@ -12,8 +12,8 @@ GlueMaidAudioProcessor::GlueMaidAudioProcessor()
 
 GlueMaidAudioProcessor::~GlueMaidAudioProcessor()
 {
-    for (auto* p : apvts.getParameterPointerList())
-        apvts.removeParameterListener(p->paramID, this);
+    for (auto* id : { IDs::glue, IDs::punch, IDs::soft, IDs::scHp, IDs::mix, IDs::output, IDs::clip })
+        apvts.removeParameterListener (id, this);
 }
 
 const juce::String GlueMaidAudioProcessor::getName() const { return "GlueMaid"; }
@@ -156,7 +156,7 @@ void GlueMaidAudioProcessor::updateTargetsIfNeeded()
 
         auto c = juce::dsp::IIR::Coefficients<float>::makeHighPass(sr, scHpHz, 0.707f);
         for (int ch=0; ch<2; ++ch)
-            *scHP[ch].state = *c;
+            *scHP[ch].coefficients = *c;
     }
 }
 
@@ -308,4 +308,10 @@ void GlueMaidAudioProcessor::setStateInformation (const void* data, int sizeInBy
     if (xml && xml->hasTagName(apvts.state.getType()))
         apvts.replaceState(juce::ValueTree::fromXml(*xml));
     dirty.store(true, std::memory_order_release);
+}
+
+// Standard JUCE factory (required by juce_add_plugin).
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+{
+    return new GlueMaidAudioProcessor();
 }
